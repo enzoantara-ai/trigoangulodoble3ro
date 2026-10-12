@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reto del Ángulo Doble – Trigonometría 3.° sec</title>
+<style>
+:root{--bg:#eef3fb;--card:#fff;--ink:#1c2a43;--main:#2f5bd2;--ok:#2e9d57;--bad:#d64545;--soft:#e4ebfa}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);display:flex;justify-content:center;padding:16px;min-height:100vh}
+.wrap{width:100%;max-width:720px}
+.card{background:var(--card);border-radius:18px;padding:24px;box-shadow:0 6px 24px rgba(30,50,100,.12)}
+h1{margin:0 0 6px;font-size:1.7rem;color:var(--main)}
+h2{margin:0 0 14px;font-size:1.25rem}
+p{line-height:1.5}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1.05rem;font-weight:600;cursor:pointer;margin-top:10px}
+.btn:hover{filter:brightness(1.1)}
+.btn.alt{background:var(--soft);color:var(--main)}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:8px}
+.bar{height:10px;background:var(--soft);border-radius:8px;overflow:hidden;margin-bottom:18px}
+.bar div{height:100%;background:var(--main);width:0;transition:width .3s}
+.q{font-size:1.3rem;margin:6px 0 18px;line-height:1.7}
+.opts{display:grid;gap:10px}
+.opt{background:var(--soft);border:2px solid transparent;border-radius:12px;padding:14px;font-size:1.15rem;cursor:pointer;text-align:left;color:var(--ink);font-family:inherit}
+.opt:hover:not(:disabled){border-color:var(--main)}
+.opt.ok{background:#d9f3e3;border-color:var(--ok)}
+.opt.bad{background:#fbdede;border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.fb{margin-top:16px;padding:14px;border-radius:12px;background:#f6f8fd;border-left:5px solid var(--main);display:none;line-height:1.55}
+.fb.show{display:block}
+.fb b.ok{color:var(--ok)} .fb b.bad{color:var(--bad)}
+.f{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px;line-height:1.25}
+.f>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px}
+.f>span:last-child{padding:0 4px}
+.big{font-size:3rem;margin:4px 0}
+.hide{display:none}
+.tip{background:#fff7dd;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:.95rem}
+ul{padding-left:20px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="inicio" class="card">
+  <h1>🎯 Reto del Ángulo Doble</h1>
+  <p><b>Trigonometría · 3.° de secundaria</b></p>
+  <p>Responde 10 preguntas sobre las identidades del ángulo doble. Verás al instante si acertaste y <b>por qué</b>. Puedes jugar todas las veces que quieras: las preguntas y las alternativas cambian de orden cada vez.</p>
+  <ul>
+    <li>Cada acierto vale 10 puntos.</li>
+    <li>Si fallas, lee la explicación: ¡ahí está el aprendizaje!</li>
+    <li>Meta: 100 puntos 🏆</li>
+  </ul>
+  <div class="tip">💡 Ten lápiz y papel a la mano. Las últimas preguntas se resuelven mejor escribiendo.</div>
+  <button class="btn" onclick="empezar()">¡Empezar!</button>
+</div>
+
+<div id="juego" class="card hide">
+  <div class="top"><span id="num"></span><span id="pts"></span></div>
+  <div class="bar"><div id="prog"></div></div>
+  <div class="q" id="preg"></div>
+  <div class="opts" id="opts"></div>
+  <div class="fb" id="fb"></div>
+  <button class="btn hide" id="sig" onclick="siguiente()">Siguiente ▶</button>
+</div>
+
+<div id="fin" class="card hide">
+  <div class="big" id="medalla"></div>
+  <h2 id="resTit"></h2>
+  <p id="resTxt"></p>
+  <p><b>Puntaje:</b> <span id="resPts"></span> / 100</p>
+  <button class="btn" onclick="empezar()">🔁 Jugar otra vez</button>
+  <button class="btn alt" onclick="volver()">Inicio</button>
+</div>
+
+</div>
+
+<script>
+const fr=(n,d)=>`<span class="f"><span>${n}</span><span>${d}</span></span>`;
+
+const BANCO=[
+ {q:"¿A qué es igual <b>sen 2θ</b>?",
+  o:["2 senθ","2 senθ cosθ","senθ cosθ","sen²θ"],c:1,
+  e:"sen 2θ = 2 senθ cosθ. Ojo: <b>no</b> es 2 senθ. Prueba: sen 60° ≈ 0,866 pero 2·sen 30° = 1."},
+ {q:"¿Cuál es equivalente a <b>sen 100°</b>?",
+  o:["2 sen100° cos100°","2 sen50° cos50°","sen50° + cos50°","2 sen200°"],c:1,
+  e:"El ángulo doble de 50° es 100°. Entonces sen 100° = 2 sen50° cos50°."},
+ {q:"¿A qué es igual <b>cos 16°</b>?",
+  o:["1 − 2sen²8°","1 − 2sen²16°","2cos²16° − 1","2 sen8° cos8°"],c:0,
+  e:"cos 2θ = 1 − 2sen²θ con θ = 8°. Las otras dan cos 32°, sen 16° o no coinciden."},
+ {q:"¿A qué es igual <b>2sen²20°</b>?",
+  o:["1 + cos40°","1 − cos20°","1 − cos40°","2cos²20°"],c:2,
+  e:"Identidad de degradación: 2sen²θ = 1 − cos2θ. Con θ = 20° resulta 1 − cos40°."},
+ {q:"¿A qué es igual <b>tan 80°</b>?",
+  o:[fr("2tan40°","1 + tan²40°"),fr("2tan40°","1 − tan²40°"),fr("1 − tan²40°","2tan40°"),fr("2tan80°","1 − tan²80°")],c:1,
+  e:"tan 2θ = "+fr("2tanθ","1 − tan²θ")+" con θ = 40°. Cuidado: con signo + en el denominador sería sen 80°."},
+ {q:"Si senθ = 3/5 (θ agudo), ¿cuánto vale <b>sen 2θ</b>?",
+  o:["6/5","12/25","24/25","7/25"],c:2,
+  e:"Si senθ = 3/5 entonces cosθ = 4/5 (triángulo 3-4-5). sen2θ = 2·(3/5)·(4/5) = 24/25."},
+ {q:"Si senx = 1/3, ¿cuánto vale <b>cos 2x</b>?",
+  o:["2/3","8/9","5/9","7/9"],c:3,
+  e:"cos2x = 1 − 2sen²x = 1 − 2·(1/9) = 7/9."},
+ {q:"Calcula: "+fr("2tan 67°30′","1 − tan² 67°30′"),
+  o:["1","−1","0","√2 − 1"],c:1,
+  e:"Es tan 2θ con θ = 67°30′, o sea tan 135° = −1 (el ángulo está en el 2.° cuadrante)."},
+ {q:"Reduce: <b>cos⁴x − sen⁴x</b>",
+  o:["1","sen 2x","cos 2x","cos²x"],c:2,
+  e:"Diferencia de cuadrados: (cos²x − sen²x)(cos²x + sen²x) = cos2x · 1 = cos 2x."},
+ {q:"Si senx − cosx = 1/√7, calcula <b>sen 2x</b>. <br><small>(Pista: eleva al cuadrado)</small>",
+  o:["−6/7","3/7","6/7","2/7"],c:2,
+  e:"(senx − cosx)² = 1 − 2senx cosx = 1 − sen2x = 1/7. Entonces sen2x = 6/7."},
+ {q:"Si "+fr("sen 2θ","cosθ")+" + senθ = 2, calcula "+fr("senθ − 1","senθ + 1"),
+  o:[("2/3"),"−1/5","−1/3","1/5"],c:1,
+  e:"sen2θ/cosθ = 2senθ, luego 3senθ = 2 y senθ = 2/3. Entonces (2/3 − 1)/(2/3 + 1) = (−1/3)/(5/3) = −1/5."}
+];
+
+let preguntas=[],idx=0,pts=0,respondida=false;
+const $=id=>document.getElementById(id);
+const barajar=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+function empezar(){
+  preguntas=barajar(BANCO).map(p=>{
+    const op=p.o.map((t,i)=>({t,ok:i===p.c}));
+    return {q:p.q,e:p.e,o:barajar(op)};
+  });
+  idx=0;pts=0;
+  ["inicio","fin"].forEach(i=>$(i).classList.add("hide"));
+  $("juego").classList.remove("hide");
+  mostrar();
+}
+function volver(){$("fin").classList.add("hide");$("inicio").classList.remove("hide")}
+function mostrar(){
+  respondida=false;
+  const p=preguntas[idx];
+  $("num").textContent=`Pregunta ${idx+1} de ${preguntas.length}`;
+  $("pts").textContent=`⭐ ${pts} pts`;
+  $("prog").style.width=(idx/preguntas.length*100)+"%";
+  $("preg").innerHTML=p.q;
+  const cont=$("opts");cont.innerHTML="";
+  const letras=["A","B","C","D"];
+  p.o.forEach((op,i)=>{
+    const b=document.createElement("button");
+    b.className="opt";b.innerHTML=`<b>${letras[i]})</b> ${op.t}`;
+    b.onclick=()=>elegir(i,b);
+    cont.appendChild(b);
+  });
+  $("fb").className="fb";$("sig").classList.add("hide");
+}
+function elegir(i,btn){
+  if(respondida)return;respondida=true;
+  const p=preguntas[idx];
+  const botones=[...document.querySelectorAll(".opt")];
+  botones.forEach((b,k)=>{b.disabled=true;if(p.o[k].ok)b.classList.add("ok")});
+  const fb=$("fb");
+  if(p.o[i].ok){pts+=10;fb.innerHTML=`<b class="ok">✅ ¡Correcto!</b><br>${p.e}`}
+  else{btn.classList.add("bad");fb.innerHTML=`<b class="bad">❌ Casi.</b> Mira por qué:<br>${p.e}`}
+  fb.classList.add("show");
+  $("pts").textContent=`⭐ ${pts} pts`;
+  $("sig").textContent=idx===preguntas.length-1?"Ver resultado 🏁":"Siguiente ▶";
+  $("sig").classList.remove("hide");
+}
+function siguiente(){
+  idx++;
+  if(idx>=preguntas.length)return terminar();
+  mostrar();
+}
+function terminar(){
+  $("juego").classList.add("hide");$("fin").classList.remove("hide");
+  $("resPts").textContent=pts;
+  let m,t,x;
+  if(pts===100){m="🏆";t="¡Maestro del ángulo doble!";x="Puntaje perfecto. Ya puedes retar a tus compañeros."}
+  else if(pts>=70){m="🥈";t="¡Muy bien!";x="Dominas casi todo. Repasa las preguntas que fallaste y vuelve a intentar."}
+  else if(pts>=40){m="🥉";t="Vas por buen camino";x="Revisa las fórmulas de la ficha y juega de nuevo: las explicaciones te ayudarán."}
+  else{m="💪";t="¡No te rindas!";x="Lee otra vez las identidades del ángulo doble y vuelve a intentarlo. Cada intento enseña algo."}
+  $("medalla").textContent=m;$("resTit").textContent=t;$("resTxt").textContent=x;
+}
+</script>
+</body>
+</html>
